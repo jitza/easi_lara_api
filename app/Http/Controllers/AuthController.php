@@ -3,10 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Services\AuthService;
 
 class AuthController extends Controller
 {
+    protected $authService;
+
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
+
     public function login(Request $request)
     {
         $request->validate([
@@ -14,59 +21,42 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        $username = strtolower(explode('@', $request->username)[0]);
-        $password = $request->password;
+        try {
+            $user = $this->authService->authenticate(
+                $request->username,
+                $request->password
+            );
 
-        if (!$this->ldapAuthenticate($username, $password) &&
-            !$this->pgsqlAuthenticate($username, $password)) {
-            
+            if (!$user) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Mismatch username/password'
+                ], 401);
+            }
+
+            $token = $user->createToken('api-token')->plainTextToken;
+
+            return response()->json([
+                'success' => true,
+                'token' => $token,
+                'user' => $user
+            ]);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Mismatch username/password'
-            ], 401);
+                'message' => $e->getMessage()
+            ], $e->getCode() ?: 500);
         }
+    }
 
-        $user = User::where('username', $username)->first();
-
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found in system'
-            ], 404);
-        }
-
-        if ($user->status === 'Disabled') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Account disabled'
-            ], 403);
-        }
-
-        if ($user->activeUntil && now()->gt($user->activeUntil)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Account expired'
-            ], 403);
-        }
-
-        $token = $user->createToken('api-token')->plainTextToken;
+    public function logout(Request $request)
+    {
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json([
             'success' => true,
-            'token' => $token,
-            'user' => $user
+            'message' => 'Logged out successfully'
         ]);
     }
-    private function ldapAuthenticate($username, $password)
-    {
-        return false; // placeholder for now
-    }
-
-    private function pgsqlAuthenticate($username, $password)
-    {
-        return false; // placeholder for now
-    }
-
-    
 }
-
