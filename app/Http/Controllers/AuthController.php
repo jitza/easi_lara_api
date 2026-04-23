@@ -66,7 +66,11 @@ class AuthController extends Controller
 
     public function redirectToMicrosoft()
     {
-        return Socialite::driver('microsoft')->redirect();
+        // dd(Socialite::driver('microsoft'));
+        return Socialite::driver('microsoft')
+        ->with(['prompt' => 'select_account']) // or login to force login every time
+        ->redirect();
+        
     }
 
     public function handleMicrosoftCallback()
@@ -87,6 +91,9 @@ class AuthController extends Controller
             ], 404);
         }
 
+        // remove old tokens
+        $user->tokens()->delete();
+
         // Create Sanctum token
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -94,7 +101,7 @@ class AuthController extends Controller
         $key = Str::random(40);
 
         // Store token for 1 minute
-        Cache::put("login_$key", $token, now()->addMinutes(10));
+        Cache::put("login_$key", $token, now()->addSeconds(30));
 
         // Redirect WITH token
         return redirect("http://localhost:9000/auth/callback?key={$key}");
@@ -113,7 +120,7 @@ class AuthController extends Controller
         if (!$token) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid or expired key'
+                'message' => 'Logout Successfully'
             ], 400);
         }
 
