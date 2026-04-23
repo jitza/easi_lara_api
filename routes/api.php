@@ -10,3 +10,4 @@ Route::middleware('auth:sanctum')->post('/logout', [AuthController::class, 'logo
 
 Route::middleware('auth:sanctum')->get('/user', fn (Request $r) => $r->user());
 
+Route::get('/auth/token/{key}', [AuthController::class, 'getToken']);

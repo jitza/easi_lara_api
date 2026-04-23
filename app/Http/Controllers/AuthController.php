@@ -3,7 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 use App\Services\AuthService;
+use Laravel\Socialite\Facades\Socialite;
+use App\Models\UserAccountsModel;
 
 class AuthController extends Controller
 {
@@ -59,4 +63,64 @@ class AuthController extends Controller
             'message' => 'Logged out successfully'
         ]);
     }
+
+    public function redirectToMicrosoft()
+    {
+        return Socialite::driver('microsoft')->redirect();
+    }
+
+    public function handleMicrosoftCallback()
+    {
+        $microsoftUser = Socialite::driver('microsoft')->user();
+
+        $email = $microsoftUser->getEmail();
+        $username = strtolower(explode('@', $email)[0]);
+
+        // Match user with your existing DB
+        $user = UserAccountsModel::whereRaw('LOWER(username) = ?', [$username])->first();
+ 
+        if (!$user) {
+            // return redirect('http://localhost:9000/?error=user_not_found');
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found in system'
+            ], 404);
+        }
+
+        // Create Sanctum token
+        $token = $user->createToken('api-token')->plainTextToken;
+
+       // Create temporary key
+        $key = Str::random(40);
+
+        // Store token for 1 minute
+        Cache::put("login_$key", $token, now()->addMinutes(10));
+
+        // Redirect WITH token
+        return redirect("http://localhost:9000/auth/callback?key={$key}");
+    }
+    
+    public function getToken($key)
+    {
+        $token = Cache::pull("login_$key"); // pull = get + delete //returns token
+
+         //Bind key to IP and validate on retrieval (optional, for added security)
+        //  Cache::put("login_$key", [
+        //     'token' => $token,
+        //     'ip' => request()->ip()
+        // ], now()->addMinutes(1));
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid or expired key'
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+            'token' => $token
+        ]);
+    }
+
 }
