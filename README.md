@@ -17,8 +17,18 @@ php artisan boost:install
 
 php artisan serve
 
-php artisan migrate 
+php artisan migrate (Don't migrate db is already in a server)
 
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Clear Cache
+
+php artisan config:clear
+php artisan cache:clear
+php artisan optimize:clear
+
+
+## Generateb app key
+php artisan key:generate
