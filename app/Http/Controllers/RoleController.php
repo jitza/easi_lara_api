@@ -7,25 +7,22 @@ use App\Models\Roles;
 use App\Models\Module;
 use App\Models\ModuleFeatures;
 use App\Models\RoleModuleFeatures;
-use App\Models\UserModuleFeatures;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-
 
 class RoleController extends Controller
 {
     // GET /api/roles
+    public function index()
+    {
+        $roles = Roles::select('roles.id', 'roles.rolename', 'roles.roledescription', 'roles.status')
+            ->leftJoin('userModuleFeatures as umf', 'umf.roleId', '=', 'roles.id')
+            ->selectRaw('COUNT(DISTINCT umf."userAccountId") as "userCount"')
+            ->groupBy('roles.id', 'roles.rolename', 'roles.roledescription', 'roles.status')
+            ->get();
 
-public function index()
-{
-    $roles = roles::select('roles.id', 'roles.rolename', 'roles.roledescription', 'roles.status')
-        ->leftJoin('userModuleFeatures as umf', 'umf.roleId', '=', 'roles.id')
-        ->selectRaw('COUNT(DISTINCT umf."userAccountId") as "userCount"')
-        ->groupBy('roles.id', 'roles.rolename', 'roles.roledescription', 'roles.status')
-        ->get();
+        return response()->json($roles);
+    }
 
-    return response()->json($roles);
-}
     // POST /api/roles
     public function store(Request $request)
     {
@@ -36,6 +33,7 @@ public function index()
         ]);
 
         DB::beginTransaction();
+
         try {
             $role = Roles::create([
                 'rolename'        => $request->rolename,
@@ -43,8 +41,9 @@ public function index()
                 'status'          => $request->status ?? 'Active',
             ]);
 
-            // Assign all features to the new role as disabled by default
+            // assign ALL features as disabled
             $features = ModuleFeatures::all();
+
             foreach ($features as $feature) {
                 RoleModuleFeatures::create([
                     'roleId'               => $role->id,
@@ -94,40 +93,40 @@ public function index()
 
     // DELETE /api/roles/{id}
     public function destroy($id)
-{
-    try {
-        $role = Roles::findOrFail($id);
+    {
+        try {
+            $role = Roles::findOrFail($id);
 
-        // check if role is assigned to any users (via relationship)
-        $hasUsers = $role->userModuleFeatures()->exists();
+            // prevent deleting if users assigned
+            if ($role->userModuleFeatures()->exists()) {
+                return response()->json([
+                    'error' => 'Cannot delete role. Users are still assigned to it.'
+                ], 422);
+            }
 
-        if ($hasUsers) {
+            // delete permissions first
+            $role->roleModuleFeatures()->delete();
+
+            // delete role
+            $role->delete();
+
             return response()->json([
-                'error' => 'Cannot delete role. Users are still assigned to it.'
-            ], 422);
+                'message' => 'Role deleted successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage()
+            ], 500);
         }
-
-        // delete related permissions via relationship
-        $role->roleModuleFeatures()->delete();
-
-        // delete role
-        $role->delete();
-
-        return response()->json([
-            'message' => 'Role deleted successfully'
-        ]);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage()
-        ], 500);
     }
-}
 
     // GET /api/role-permissions/{roleId}
-    public function getPermissions($roleId)
-    {
-        $modules = Module::with(['features' => function ($query) use ($roleId) {
+ public function getPermissions($roleId)
+{
+    $modules = Module::select('id', 'moduleName')
+        ->with(['features' => function ($query) use ($roleId) {
+
             $query->leftJoin('roleModuleFeatures as rmf', function ($join) use ($roleId) {
                 $join->on('rmf.moduleFeatureId', '=', 'moduleFeatures.id')
                      ->where('rmf.roleId', '=', $roleId);
@@ -137,12 +136,19 @@ public function index()
                 'moduleFeatures.featureName',
                 'moduleFeatures.featureDescription',
                 'moduleFeatures.moduleId',
-                DB::raw("COALESCE(rmf.\"moduleFeatureEnabled\", 'No') as moduleFeatureEnabled")
+                DB::raw('COALESCE(rmf."moduleFeatureEnabled", \'No\') as "moduleFeatureEnabled"')
             );
-        }])->get();
 
-        return response()->json($modules);
-    }
+            \Log::info('Final SQL', [
+                'sql'      => $query->toSql(),
+                'bindings' => $query->getBindings()
+            ]);
+        }])
+        ->get();
+
+
+    return response()->json($modules);
+}
 
     // PUT /api/role-permissions/{roleId}
     public function updatePermissions(Request $request, $roleId)

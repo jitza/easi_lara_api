@@ -26,6 +26,13 @@ class MenuController extends Controller
             ->whereNotNull('roleId')
             ->value('roleId');
 
+
+        // $userRole = \DB::table('userModuleFeatures')
+        // ->where('userAccountId', $user->id)
+        // ->whereNotNull('roleId')
+        // ->orderByDesc('id') // ALWAYS take latest
+        // ->value('roleId');
+
         // Debug roleId
         Log::info('Role ID: ' . $userRole);
 

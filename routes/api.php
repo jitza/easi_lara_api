@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\PersonalInfo;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserManagementController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -17,8 +18,6 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $r) {
 });
 Route::middleware('auth:sanctum')->get('/menu', [MenuController::class, 'userMenu']);
 Route::get('/auth/token/{key}', [AuthController::class, 'getToken']);
-// roles 
-
 
 // Roles
 Route::get('/roles', [RoleController::class, 'index']);
@@ -29,3 +28,8 @@ Route::delete('/roles/{id}', [RoleController::class, 'destroy']);
 // Role Permissions
 Route::get('/role-permissions/{roleId}', [RoleController::class, 'getPermissions']);
 Route::put('/role-permissions/{roleId}', [RoleController::class, 'updatePermissions']);
+// User Management
+Route::get('/users', [UserManagementController::class, 'index']);
+Route::put('/users/{id}/status', [UserManagementController::class, 'updateStatus']);
+Route::put('/users/{id}/role', [UserManagementController::class, 'updateRole']);
+

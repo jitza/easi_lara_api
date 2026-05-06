@@ -52,4 +52,9 @@ public function user_usernames()
 {
     return $this->hasOne(UserUsernames::class, 'username', 'username');
 }
+
+public function userModuleFeatures()
+{
+    return $this->hasMany(UserModuleFeatures::class, 'userAccountId', 'id');
+}
 }

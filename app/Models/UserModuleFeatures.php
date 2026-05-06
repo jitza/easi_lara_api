@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Roles;
 
 class UserModuleFeatures extends Model
 {
@@ -20,6 +21,11 @@ class UserModuleFeatures extends Model
 public function userModuleFeatures()
 {
     return $this->hasMany(UserModuleFeatures::class, 'roleId', 'id');
+}
+
+public function role()
+{
+    return $this->belongsTo(Roles::class, 'roleId', 'id');
 }
 
 }

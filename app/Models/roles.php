@@ -30,4 +30,5 @@ class roles extends Model
     {
         return $this->hasMany(UserModuleFeatures::class, 'roleId', 'id');
     }
+
 }
