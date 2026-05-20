@@ -43,18 +43,19 @@ class UserAccountsModel extends Authenticatable
 
 
     public function personalInfo()
-{
-    return $this->belongsTo(PersonalInfo::class, 'personId', 'id');
-}
+    {
+        return $this->belongsTo(PersonalInfo::class, 'personId', 'id');
+    }
 
 
-public function user_usernames()
-{
-    return $this->hasOne(UserUsernames::class, 'username', 'username');
-}
+    public function user_usernames()
+    {
+        return $this->hasOne(UserUsernames::class, 'username', 'username');
+    }
 
-public function userModuleFeatures()
-{
-    return $this->hasMany(UserModuleFeatures::class, 'userAccountId', 'id');
-}
+    public function userModuleFeatures()
+    {
+        return $this->hasMany(UserModuleFeatures::class, 'userAccountId', 'id');
+    }
+
 }

@@ -18,14 +18,14 @@ class UserModuleFeatures extends Model
         'moduleFeatureEnabled',
     ];
 
-public function userModuleFeatures()
-{
-    return $this->hasMany(UserModuleFeatures::class, 'roleId', 'id');
-}
+    public function userModuleFeatures()
+    {
+        return $this->hasMany(UserModuleFeatures::class, 'roleId', 'id');
+    }
 
-public function role()
-{
-    return $this->belongsTo(Roles::class, 'roleId', 'id');
-}
+    public function role()
+    {
+        return $this->belongsTo(Roles::class, 'roleId', 'id');
+    }
 
 }

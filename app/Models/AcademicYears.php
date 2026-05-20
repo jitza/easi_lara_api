@@ -4,17 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class  UserUsernames extends Model
+class AcademicYears extends Model
 {
-    protected $table = 'personnel.user_usernames';
     protected $connection = 'pgsql';
+    protected $table = 'academics.academicYears';
+    
 
     public $timestamps = false;
 
     protected $fillable = [
-        'id',
-        'username'
+        
+        'startDate',
+        'endDate',
+        'code',
+        'name',
+        
     ];
-
-   
 }

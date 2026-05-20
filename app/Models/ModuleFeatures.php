@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Module;
  class ModuleFeatures extends Model
  {
-  protected $table = 'moduleFeatures';
+    protected $table = 'moduleFeatures';
     protected $primaryKey = 'id';
     public $timestamps = false;
 
@@ -29,13 +29,3 @@ use App\Models\Module;
     }
 }
 
-// class ModuleFeatures extends Model
-// {
-//     protected $table = 'moduleFeatures';
-//     protected $connection = 'pgsql';
-//     public function module()
-//     {
-//        // return $this->belongsTo(Module::class, 'moduleId',);
-//     return $this->belongsTo(Module::class, 'moduleId', 'id');
-//        }
-// }
