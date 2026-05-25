@@ -143,8 +143,6 @@ class ManageBuildingsandRoomsController extends Controller
 
 
     // ROOMS
-   
-
 
     public function storeRoom(Request $request, $buildingId)
     {
