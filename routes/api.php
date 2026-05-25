@@ -11,6 +11,7 @@ use App\Http\Controllers\ManageAcademicYearController;
 use App\Http\Controllers\ManageSemesterController;
 use App\Http\Controllers\SemesterStatusController;
 use App\Http\Controllers\ManageGraduationController;
+use App\Http\Controllers\ManageBuildingsandRoomsController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
@@ -49,12 +50,27 @@ Route::get('/semesters', [ManageSemesterController::class, 'index']);
 Route::post('/semesters', [ManageSemesterController::class, 'store']);
 Route::put('/semesters/{id}', [ManageSemesterController::class, 'update']);
 Route::delete('/semesters/{id}', [ManageSemesterController::class, 'destroy']);
+
 // semester status
 Route::get('/semester-status', [SemesterStatusController::class, 'getStatuses']);
+
 // graduation dates
 Route::get('/graduation-dates', [ManageGraduationController::class, 'index']);
 Route::post('/graduation-dates', [ManageGraduationController::class, 'store']);
 Route::put('/graduation-dates/{id}', [ManageGraduationController::class, 'update']);
 Route::delete('/graduation-dates/{id}', [ManageGraduationController::class, 'destroy']);
-// semesters for dropdown
+
+
+
+// Buildings
+Route::get('/buildings-rooms',          [ManageBuildingsandRoomsController::class, 'index']);
+Route::post('/buildings',               [ManageBuildingsandRoomsController::class, 'storeBuilding']);
+Route::put('/buildings/{id}',           [ManageBuildingsandRoomsController::class, 'updateBuilding']);
+Route::delete('/buildings/{id}',        [ManageBuildingsandRoomsController::class, 'destroyBuilding']);
+
+// Rooms (nested under buildings)
+Route::post('/buildings/{buildingId}/rooms',              [ManageBuildingsandRoomsController::class, 'storeRoom']);
+Route::put('/buildings/{buildingId}/rooms/{roomId}',      [ManageBuildingsandRoomsController::class, 'updateRoom']);
+Route::delete('/buildings/{buildingId}/rooms/{roomId}',   [ManageBuildingsandRoomsController::class, 'destroyRoom']);
+Route::get('buildings-rooms/search', [ManageBuildingsandRoomsController::class, 'search']);
 
